@@ -1,18 +1,51 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <h1>KGX Concept Tree</h1>
+
+    <div class="col-10 m-auto">
+      <b-card header="Inputs" class="mt-3">
+        <b-input-group prepend="KGX nodes file">
+          <b-form-file v-model="nodes_file"></b-form-file>
+        </b-input-group>
+        <b-input-group prepend="KGX edges file">
+          <b-form-file v-model="edges_file"></b-form-file>
+        </b-input-group>
+      </b-card>
+
+      <b-card header="File stats" class="mt-3">
+        <p>The KGX files contain {{nodes.length-1}} nodes and {{edges.length-1}} edges.</p>
+      </b-card>
+
+      <p></p>
+    </div>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-
 export default {
   name: 'App',
-  components: {
-    HelloWorld
-  }
+  data() { return {
+    nodes_file: null,
+    nodes_text: "",
+    edges_file: null,
+    edges_text: "",
+  }},
+  watch: {
+    nodes_file() {
+      this.nodes_file.text().then(content => { this.nodes_text = content })
+    },
+    edges_file() {
+      this.edges_file.text().then(content => { this.edges_text = content })
+    },
+  },
+  computed: {
+    nodes() {
+      return (this.nodes_text).split(/\r\n|\r|\n/);
+    },
+    edges() {
+      return (this.edges_text).split(/\r\n|\r|\n/);
+    },
+  },
 }
 </script>
 
