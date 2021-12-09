@@ -89,7 +89,7 @@ export default {
           count: concepts.length,
           concepts: concepts
         }
-      })
+      }).sort((a, b) => a.count > b.count)
     },
     edges() {
       return (this.edges_text).split(/\r\n|\r|\n/).filter(str => str != '').map(JSON.parse);
