@@ -25,6 +25,12 @@
             <ul v-if="selected_category == category.name">
               <li v-for="concept in category.concepts" :key="concept['id']">
                 {{concept.name}} ({{concept.id}})
+                
+                <ul v-if="get_cdes_for_concept(concept)">
+                  <li v-for="cde in get_cdes_for_concept(concept)" :key="cde['id']">
+                    <tt>{{cde.terms}}</tt> in {{cde.id}}
+                  </li>
+                </ul>
               </li>
             </ul>
            
@@ -39,7 +45,7 @@
 </template>
 
 <script>
-// import { groupBy } from 'lodash'
+import { groupBy, toPairs } from 'lodash'
 
 export default {
   name: 'App',
@@ -74,6 +80,7 @@ export default {
       return [...new Set(this.concepts.map(concept => concept['id']))];
     },
     concept_categories() {
+      // TODO: Replace with lodash.includes()
       let categories = [...new Set(this.concepts.map(concept => concept['category']).flat())];
       return categories.map(category => {
         let concepts = this.concepts.filter(concept => new Set(concept.category).has(category))
@@ -86,6 +93,19 @@ export default {
     },
     edges() {
       return (this.edges_text).split(/\r\n|\r|\n/).filter(str => str != '').map(JSON.parse);
+    },
+  },
+  methods: {
+    get_cdes_for_concept(concept) {
+      let edges = this.edges.filter(edge => edge['object'] == concept.id)
+      let cdes = groupBy(edges, edge => edge['subject'])
+      return toPairs(cdes).map(entry => {
+        let [key, value] = entry;
+        return {
+          id: decodeURI(key),
+          terms: [...new Set(value.map(edge => edge['name'].toLowerCase()))],
+        }
+      })
     },
   },
 }
