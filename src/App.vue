@@ -17,11 +17,20 @@
       </b-card>
 
       <b-card header="Concepts" class="mt-3">
-        <ul>
-          <li v-for="concept in concepts" :key="concept['id']">
-            {{concept}}
+        <ul style="text-align: left">
+          <li v-for="category in concept_categories" :key="category.name" :id="category.name">
+            <a :href="'#' + category.name"
+              @click="selected_category=(selected_category == category.name ? '' : category.name)">{{category.name}}</a> ({{category.count}})
+ 
+            <ul v-if="selected_category == category.name">
+              <li v-for="concept in category.concepts" :key="concept['id']">
+                {{concept.name}} ({{concept.id}})
+              </li>
+            </ul>
+           
           </li>
         </ul>
+
       </b-card>
 
       <p></p>
@@ -30,6 +39,8 @@
 </template>
 
 <script>
+// import { groupBy } from 'lodash'
+
 export default {
   name: 'App',
   data() { return {
@@ -37,6 +48,7 @@ export default {
     nodes_text: "",
     edges_file: null,
     edges_text: "",
+    selected_category: "",
   }},
   watch: {
     nodes_file() {
@@ -60,6 +72,17 @@ export default {
     },
     concept_ids() {
       return [...new Set(this.concepts.map(concept => concept['id']))];
+    },
+    concept_categories() {
+      let categories = [...new Set(this.concepts.map(concept => concept['category']).flat())];
+      return categories.map(category => {
+        let concepts = this.concepts.filter(concept => new Set(concept.category).has(category))
+        return {
+          name: category,
+          count: concepts.length,
+          concepts: concepts
+        }
+      })
     },
     edges() {
       return (this.edges_text).split(/\r\n|\r|\n/).filter(str => str != '').map(JSON.parse);
