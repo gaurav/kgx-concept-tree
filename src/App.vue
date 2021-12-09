@@ -13,7 +13,15 @@
       </b-card>
 
       <b-card header="File stats" class="mt-3">
-        <p>The KGX files contain {{nodes.length-1}} nodes and {{edges.length-1}} edges.</p>
+        The KGX files contain {{nodes.length}} nodes (including {{concepts.length}} concepts, {{concept_ids.length}} unique) and {{edges.length}} edges.
+      </b-card>
+
+      <b-card header="Concepts" class="mt-3">
+        <ul>
+          <li v-for="concept in concepts" :key="concept['id']">
+            {{concept}}
+          </li>
+        </ul>
       </b-card>
 
       <p></p>
@@ -40,10 +48,21 @@ export default {
   },
   computed: {
     nodes() {
-      return (this.nodes_text).split(/\r\n|\r|\n/);
+      return (this.nodes_text).split(/\r\n|\r|\n/).filter(str => str != '').map(JSON.parse);
+    },
+    concepts() {
+      return this.nodes.filter(node => {
+        let provided_by = node['provided_by']
+        if(provided_by && (provided_by[0] == 'Monarch NER service + Translator normalization API'))
+          return true;
+        return false;
+      });
+    },
+    concept_ids() {
+      return [...new Set(this.concepts.map(concept => concept['id']))];
     },
     edges() {
-      return (this.edges_text).split(/\r\n|\r|\n/);
+      return (this.edges_text).split(/\r\n|\r|\n/).filter(str => str != '').map(JSON.parse);
     },
   },
 }
