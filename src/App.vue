@@ -16,16 +16,16 @@
         The KGX files contain {{nodes.length}} nodes (including {{concepts.length}} concepts, {{concept_ids.length}} unique) and {{edges.length}} edges.
       </b-card>
 
-      <b-card header="Concepts" class="mt-3">
+      <b-card header="Concepts by categories" class="mt-3">
         <ul style="text-align: left">
           <li v-for="category in concept_categories" :key="category.name" :id="category.name">
             <a :href="'#' + category.name"
               @click="selected_category=(selected_category == category.name ? '' : category.name)">{{category.name}}</a> ({{category.count}})
- 
+
             <ul v-if="selected_category == category.name">
               <li v-for="concept in category.concepts" :key="concept['id']">
                 {{concept.name}} ({{concept.id}})
-                
+
                 <ul v-if="get_cdes_for_concept(concept)">
                   <li v-for="cde in get_cdes_for_concept(concept)" :key="cde['id']">
                     <tt>{{cde.terms}}</tt> in {{cde.id}}
@@ -33,10 +33,27 @@
                 </ul>
               </li>
             </ul>
-           
+
           </li>
         </ul>
+      </b-card>
 
+      <b-card header="Concepts by count" class="mt-3">
+        <ul style="text-align: left">
+          <li v-for="concept in sorted_concepts" :key="concept.name">
+
+            <a :href="'#' + concept.name"
+               @click="selected_concept=(selected_concept === concept.name ? '' : concept.name)"
+            >
+              {{concept.name}} ({{concept.id}}): {{concept.count}} CRFs
+            </a>
+            <ul v-if="selected_concept === concept.name">
+              <li v-for="cde in concept.cdes" :key="cde['id']">
+                <tt>{{cde.terms}}</tt> in {{cde.id}}
+              </li>
+            </ul>
+          </li>
+        </ul>
       </b-card>
 
       <p></p>
@@ -45,7 +62,7 @@
 </template>
 
 <script>
-import { groupBy, toPairs } from 'lodash'
+import { groupBy, toPairs, cloneDeep } from 'lodash'
 
 export default {
   name: 'App',
@@ -55,6 +72,7 @@ export default {
     edges_file: null,
     edges_text: "",
     selected_category: "",
+    selected_concept: "",
   }},
   watch: {
     nodes_file() {
@@ -75,6 +93,15 @@ export default {
           return true;
         return false;
       });
+    },
+    sorted_concepts() {
+      // Returns a list of concepts sorted by count, including the count in the 'count' field.
+      return this.concepts.map(concept => {
+        let c = cloneDeep(concept)
+        c['cdes'] = this.get_cdes_for_concept(c)
+        c['count'] = c['cdes'].length
+        return c
+      }).sort((a, b) => a['count'] < b['count'])
     },
     concept_ids() {
       return [...new Set(this.concepts.map(concept => concept['id']))];
