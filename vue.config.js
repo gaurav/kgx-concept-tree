@@ -2,7 +2,7 @@
 
 module.exports = {
   publicPath: process.env.NODE_ENV === 'production'
-    ? '/kgx-concept-tree/'
+    ? 'https://www.ggvaidya.com/kgx-concept-tree/'
     : '/'
 }
 
