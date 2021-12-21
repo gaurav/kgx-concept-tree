@@ -24,9 +24,13 @@
 
             <ul v-if="selected_category == category.name">
               <li v-for="concept in category.concepts" :key="concept['id']">
-                {{concept.name}} ({{concept.id}})
+                <a :href="'#' + concept.name"
+                   @click="selected_concept=(selected_concept === concept.name ? '' : concept.name)"
+                >
+                {{concept.name}} ({{concept.id}}): {{get_cdes_for_concept(concept).length}} CRFs
+                </a>
 
-                <ul v-if="get_cdes_for_concept(concept)">
+                <ul v-if="selected_concept == concept.name && get_cdes_for_concept(concept)">
                   <li v-for="cde in get_cdes_for_concept(concept)" :key="cde['id']">
                     <tt>{{cde.terms}}</tt> in {{cde.id}}
                   </li>
@@ -42,7 +46,7 @@
         <ul style="text-align: left">
           <li v-for="concept in sorted_concepts" :key="concept.name">
 
-            <a :href="'#' + concept.name"
+            <a :href="'#count_for_' + concept.name"
                @click="selected_concept=(selected_concept === concept.name ? '' : concept.name)"
             >
               {{concept.name}} ({{concept.id}}): {{concept.count}} CRFs
@@ -114,7 +118,12 @@ export default {
         return {
           name: category,
           count: concepts.length,
-          concepts: concepts
+          concepts: concepts.map(concept => {
+            let c = cloneDeep(concept)
+            c['cdes'] = this.get_cdes_for_concept(c)
+            c['count'] = c['cdes'].length
+            return c
+          }).sort((a, b) => a['count'] < b['count'])
         }
       }).sort((a, b) => a.count > b.count)
     },
