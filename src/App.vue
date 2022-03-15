@@ -48,9 +48,8 @@
 
             <a :href="'#count_for_' + concept.name"
                @click="selected_concept=(selected_concept === concept.name ? '' : concept.name)"
-            >
-              {{concept.name}} ({{concept.id}}): {{concept.count}} CRFs
-            </a>
+            >{{concept.name}}</a>
+            (<a target="code" :href="get_uri_for_curie(concept.id)">{{concept.id}}</a>): {{concept.count}} CRFs
             <ul v-if="selected_concept === concept.name">
               <li v-for="cde in concept.cdes" :key="cde['id']">
                 <tt>{{cde.terms}}</tt> in {{cde.id}}
@@ -66,7 +65,7 @@
 </template>
 
 <script>
-import { groupBy, toPairs, cloneDeep } from 'lodash'
+import { groupBy, toPairs, cloneDeep, has } from 'lodash'
 
 export default {
   name: 'App',
@@ -77,6 +76,11 @@ export default {
     edges_text: "",
     selected_category: "",
     selected_concept: "",
+    PREFIXES: {
+      'HP': 'http://purl.obolibrary.org/obo/HP_',
+      'GO': 'http://purl.obolibrary.org/obo/GO_',
+      'PUBCHEM.COMPOUND': 'https://pubchem.ncbi.nlm.nih.gov/compound/',
+    },
   }},
   watch: {
     nodes_file() {
@@ -132,6 +136,13 @@ export default {
     },
   },
   methods: {
+    get_uri_for_curie(curie) {
+      const [prefix, code] = curie.split(':');
+      if (has(this.PREFIXES, prefix)) {
+        return `${this.PREFIXES[prefix]}${code}`;
+      }
+      return `https://www.ebi.ac.uk/ols/search?q=${encodeURIComponent(curie)}`;
+    },
     get_cdes_for_concept(concept) {
       let edges = this.edges.filter(edge => edge['object'] == concept.id)
       let cdes = groupBy(edges, edge => edge['subject'])
