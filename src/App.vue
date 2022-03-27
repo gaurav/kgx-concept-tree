@@ -4,11 +4,22 @@
 
     <div class="col-10 m-auto">
       <b-card header="Inputs" class="mt-3">
+        <b-alert variant="danger" show class="text-left" v-if="input_errors.length > 0">
+          <p>Errors occurred while reading input files:</p>
+          <ul>
+            <li v-for="err in input_errors" :key="err.row">
+              Row {{err.row}}: {{err.text}}
+            </li>
+          </ul>
+        </b-alert>
         <b-input-group prepend="KGX nodes file">
           <b-form-file v-model="nodes_file"></b-form-file>
         </b-input-group>
         <b-input-group prepend="KGX edges file">
           <b-form-file v-model="edges_file"></b-form-file>
+        </b-input-group>
+        <b-input-group prepend="Comprehensive JSONL file">
+          <b-form-file v-model="comprehensive_file"></b-form-file>
         </b-input-group>
       </b-card>
 
@@ -70,10 +81,13 @@ import { groupBy, toPairs, cloneDeep, has } from 'lodash'
 export default {
   name: 'App',
   data() { return {
+    input_errors: [],
     nodes_file: null,
     nodes_text: "",
     edges_file: null,
     edges_text: "",
+    comprehensive_file: null,
+    comprehensive: [],
     selected_category: "",
     selected_concept: "",
     PREFIXES: {
@@ -89,6 +103,21 @@ export default {
     edges_file() {
       this.edges_file.text().then(content => { this.edges_text = content })
     },
+    comprehensive_file() {
+      this.comprehensive_file.text().then(content => {
+        this.input_errors = [];
+        this.comprehensive = content.split('\n').map((row, index) => {
+          try {
+            return JSON.parse(row);
+          } catch (err) {
+            this.input_errors.append({
+              row,
+              text: `Could not parse comprehensive JSONL line ${index}: ${err} (while parsing line: ${row})`
+            })
+          }
+        });
+      });
+    }
   },
   computed: {
     nodes() {
