@@ -4,11 +4,14 @@
 
     <div class="col-10 m-auto">
       <b-card header="Inputs" class="mt-3">
-        <b-alert variant="danger" show class="text-left" v-if="input_errors.length > 0">
+        <b-alert variant="info" show v-if="input_in_progress">
+          Please wait, loading input files ...
+        </b-alert>
+        <b-alert variant="danger" class="text-left" show v-if="input_errors.length > 0">
           <p>Errors occurred while reading input files:</p>
           <ul>
             <li v-for="err in input_errors" :key="err.row">
-              Row {{err.row}}: {{err.text}}
+              Row {{err.rowIndex}}: {{err.text}}
             </li>
           </ul>
         </b-alert>
@@ -25,6 +28,8 @@
 
       <b-card header="File stats" class="mt-3">
         The KGX files contain {{nodes.length}} nodes (including {{concepts.length}} concepts, {{concept_ids.length}} unique) and {{edges.length}} edges.
+        <br>
+        The comprehensive JSONL file contains {{comprehensive_keys.length}} CDEs.
       </b-card>
 
       <b-card header="Concepts by categories" class="mt-3">
@@ -43,7 +48,7 @@
 
                 <ul v-if="selected_concept == concept.name && get_cdes_for_concept(concept)">
                   <li v-for="cde in get_cdes_for_concept(concept)" :key="cde['id']">
-                    <tt>{{cde.terms}}</tt> in {{cde.id}}
+                    <tt>{{cde.terms}}</tt> in <a :href="'#' + cde.id">{{cde.id}}</a>
                   </li>
                 </ul>
               </li>
@@ -63,7 +68,20 @@
             (<a target="code" :href="get_uri_for_curie(concept.id)">{{concept.id}}</a>): {{concept.count}} CRFs
             <ul v-if="selected_concept === concept.name">
               <li v-for="cde in concept.cdes" :key="cde['id']">
-                <tt>{{cde.terms}}</tt> in {{cde.id}}
+                <tt>{{cde.terms}}</tt> in <a :href="'#' + cde.id">{{cde.id}}</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </b-card>
+
+      <b-card header="CDEs" class="mt-3">
+        <ul style="text-align: left">
+          <li v-for="filename in comprehensive_keys" :key="filename">
+            <a :id="'HEALCDE:' + filename">{{filename}}</a>
+            <ul>
+              <li v-for="cde in comprehensive[filename]" :key="cde.id">
+                {{cde.id}}
               </li>
             </ul>
           </li>
@@ -76,18 +94,20 @@
 </template>
 
 <script>
-import { groupBy, toPairs, cloneDeep, has } from 'lodash'
+import { groupBy, toPairs, cloneDeep, has, keys } from 'lodash'
+import Vue from 'vue'
 
 export default {
   name: 'App',
   data() { return {
+    input_in_progress: false,
     input_errors: [],
     nodes_file: null,
     nodes_text: "",
     edges_file: null,
     edges_text: "",
     comprehensive_file: null,
-    comprehensive: [],
+    comprehensive: {},
     selected_category: "",
     selected_concept: "",
     PREFIXES: {
@@ -104,22 +124,45 @@ export default {
       this.edges_file.text().then(content => { this.edges_text = content })
     },
     comprehensive_file() {
+      this.input_in_progress = true;
       this.comprehensive_file.text().then(content => {
         this.input_errors = [];
-        this.comprehensive = content.split('\n').map((row, index) => {
+        content.split(/[\n\r]+/).forEach((row, rowIndex) => {
+          if (row.trim() == '') return;
+          let entry;
           try {
-            return JSON.parse(row);
+            entry = JSON.parse(row);
+            console.log(keys(entry));
           } catch (err) {
-            this.input_errors.append({
-              row,
-              text: `Could not parse comprehensive JSONL line ${index}: ${err} (while parsing line: ${row})`
+            this.input_errors.push({
+              rowIndex,
+              text: `Could not parse comprehensive JSONL line ${rowIndex}: ${err}`
             })
           }
+          let filenames = entry.designations.flatMap(d => {
+            if (d.designation.startsWith('Filename: ')) {
+              return [d.designation.substr(10)];
+            } else return [];
+          });
+          filenames.forEach(filename => {
+            if (!(filename in this.comprehensive)) {
+              Vue.set(this.comprehensive, filename, []);
+            }
+            this.comprehensive[filename].push({
+              id: `HEALCDE:${filename}`,
+              ...entry
+            });
+            console.log("Found entry for", filename);
+          });
+          this.input_in_progress = false;
         });
       });
     }
   },
   computed: {
+    comprehensive_keys() {
+      return keys(this.comprehensive);
+    },
     nodes() {
       return (this.nodes_text).split(/\r\n|\r|\n/).filter(str => str != '').map(JSON.parse);
     },
