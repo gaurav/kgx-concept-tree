@@ -82,6 +82,12 @@
             <ul>
               <li v-for="cde in comprehensive[filename]" :key="cde.id">
                 {{cde.id}}
+                <textarea
+                    disabled
+                    class="cde_text"
+                    rows="20"
+                    v-model="cde.text"
+                ></textarea>
               </li>
             </ul>
           </li>
@@ -150,9 +156,9 @@ export default {
             }
             this.comprehensive[filename].push({
               id: `HEALCDE:${filename}`,
-              ...entry
+              text: entry['_ner']['scigraph']['crf_text'],
             });
-            console.log("Found entry for", filename);
+            console.log("Found entry for", filename, "with keys", keys(entry['_ner']));
           });
           this.input_in_progress = false;
         });
@@ -238,5 +244,9 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+
+textarea.cde_text {
+  width: 100%;
 }
 </style>
