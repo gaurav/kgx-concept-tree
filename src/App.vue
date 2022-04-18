@@ -81,13 +81,7 @@
             <a :id="'HEALCDE:' + filename">{{filename}}</a>
             <ul>
               <li v-for="cde in comprehensive[filename]" :key="cde.id">
-                {{cde.id}}
-                <textarea
-                    disabled
-                    class="cde_text"
-                    rows="20"
-                    v-model="cde.text"
-                ></textarea>
+                <HEALCDE :cde="cde" />
               </li>
             </ul>
           </li>
@@ -103,8 +97,11 @@
 import { groupBy, toPairs, cloneDeep, has, keys } from 'lodash'
 import Vue from 'vue'
 
+import HEALCDE from './components/HEALCDE'
+
 export default {
   name: 'App',
+  components: { HEALCDE },
   data() { return {
     input_in_progress: false,
     input_errors: [],
@@ -156,9 +153,11 @@ export default {
             }
             this.comprehensive[filename].push({
               id: `HEALCDE:${filename}`,
+              designations: entry['designations'],
+              formElements: entry['formElements'],
               text: entry['_ner']['scigraph']['crf_text'],
             });
-            console.log("Found entry for", filename, "with keys", keys(entry['_ner']));
+            // console.log("Found entry for", filename, "with keys", keys(entry['_ner']));
           });
           this.input_in_progress = false;
         });
