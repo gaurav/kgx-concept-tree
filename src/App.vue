@@ -145,10 +145,18 @@ export default {
   }},
   watch: {
     nodes_file() {
-      this.nodes_file.text().then(content => { this.nodes_text = content })
+      this.input_in_progress = true;
+      this.nodes_file.text().then(content => {
+        this.nodes_text = content;
+        this.input_in_progress = false;
+      });
     },
     edges_file() {
-      this.edges_file.text().then(content => { this.edges_text = content })
+      this.input_in_progress = true;
+      this.edges_file.text().then(content => {
+        this.edges_text = content;
+        this.input_in_progress = false;
+      });
     },
     comprehensive_file() {
       this.input_in_progress = true;

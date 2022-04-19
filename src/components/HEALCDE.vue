@@ -8,9 +8,11 @@
         <strong>Question: </strong> {{element.label}}
       </li>
     </ul>
+    <button class="col-12" @click="toggle_textarea = !toggle_textarea">Toggle NER text</button>
     <textarea
+        v-if="toggle_textarea"
         disabled
-        class="cde_text"
+        class="cde_text col-12"
         rows="20"
         v-model="cde.text"
     ></textarea>
@@ -22,7 +24,11 @@ export default {
   name: 'HEALCDE',
   props: {
     cde: Object
-  }
+  },
+  data() { return {
+      toggle_textarea: false,
+    };
+  },
 }
 </script>
 
