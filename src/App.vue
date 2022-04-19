@@ -32,48 +32,70 @@
         The comprehensive JSONL file contains {{comprehensive_keys.length}} CDEs.
       </b-card>
 
-      <b-card header="Concepts by categories" class="mt-3">
-        <ul style="text-align: left">
-          <li v-for="category in concept_categories" :key="category.name" :id="category.name">
-            <a :href="'#' + category.name"
-              @click="selected_category=(selected_category == category.name ? '' : category.name)">{{category.name}}</a> ({{category.count}})
+      <div class="container col-12">
+        <div class="row">
+          <div :class="selected_category_cde ? 'col-7' : 'col-12'">
+            <b-card header="Concepts by categories" class="mt-3">
+              <ul style="text-align: left">
+                <li v-for="category in concept_categories" :key="category.name" :id="category.name">
+                  <a :href="'#' + category.name"
+                    @click="selected_category=(selected_category == category.name ? '' : category.name)">{{category.name}}</a> ({{category.count}})
 
-            <ul v-if="selected_category == category.name">
-              <li v-for="concept in category.concepts" :key="concept['id']">
-                <a :href="'#' + concept.name"
-                   @click="selected_concept=(selected_concept === concept.name ? '' : concept.name)"
-                >
-                {{concept.name}} ({{concept.id}}): {{get_cdes_for_concept(concept).length}} CRFs
-                </a>
+                  <ul v-if="selected_category == category.name">
+                    <li v-for="concept in category.concepts" :key="concept['id']">
+                      <a :href="'#' + concept.name"
+                         @click="selected_concept=(selected_concept === concept.name ? '' : concept.name)"
+                      >
+                      {{concept.name}} ({{concept.id}}): {{get_cdes_for_concept(concept).length}} CRFs
+                      </a>
 
-                <ul v-if="selected_concept == concept.name && get_cdes_for_concept(concept)">
-                  <li v-for="cde in get_cdes_for_concept(concept)" :key="cde['id']">
-                    <tt>{{cde.terms}}</tt> in <a :href="'#' + cde.id">{{cde.id}}</a>
-                  </li>
-                </ul>
-              </li>
-            </ul>
+                      <ul v-if="selected_concept == concept.name && get_cdes_for_concept(concept)">
+                        <li v-for="cde in get_cdes_for_concept(concept)" :key="cde['id']">
+                          <tt>{{cde.terms}}</tt> in <a :href="'#' + category.name" @click="selected_category_cde = comprehensive[cde.id.substring(8)]">{{cde.id}}</a>
+                        </li>
+                      </ul>
+                    </li>
+                  </ul>
 
-          </li>
-        </ul>
-      </b-card>
+                </li>
+              </ul>
+            </b-card>
+          </div>
 
-      <b-card header="Concepts by count" class="mt-3">
-        <ul style="text-align: left">
-          <li v-for="concept in sorted_concepts" :key="concept.name">
+          <div v-if="selected_category_cde" class="col-5">
+            <b-card class="mt-3" v-for="cde in selected_category_cde" :key="cde.id" :header="cde.id">
+              <HEALCDE :cde="cde" />
+            </b-card>
+          </div>
+        </div>
 
-            <a :href="'#count_for_' + concept.name"
-               @click="selected_concept=(selected_concept === concept.name ? '' : concept.name)"
-            >{{concept.name}}</a>
-            (<a target="code" :href="get_uri_for_curie(concept.id)">{{concept.id}}</a>): {{concept.count}} CRFs
-            <ul v-if="selected_concept === concept.name">
-              <li v-for="cde in concept.cdes" :key="cde['id']">
-                <tt>{{cde.terms}}</tt> in <a :href="'#' + cde.id">{{cde.id}}</a>
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </b-card>
+        <div class="row">
+          <div :class="selected_category_cde ? 'col-7' : 'col-12'">
+            <b-card header="Concepts by count" class="mt-3">
+              <ul style="text-align: left">
+                <li v-for="concept in sorted_concepts" :key="concept.name">
+
+                  <a :href="'#count_for_' + concept.name"
+                     @click="selected_concept=(selected_concept === concept.name ? '' : concept.name)"
+                  >{{concept.name}}</a>
+                  (<a target="code" :href="get_uri_for_curie(concept.id)">{{concept.id}}</a>): {{concept.count}} CRFs
+                  <ul v-if="selected_concept === concept.name">
+                    <li v-for="cde in concept.cdes" :key="cde['id']">
+                      <tt>{{cde.terms}}</tt> in <a :href="'#' + concept.name"  @click="selected_concept_cde = comprehensive[cde.id.substring(8)]">{{cde.id}}</a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </b-card>
+          </div>
+
+          <div v-if="selected_concept_cde" class="col-5">
+            <b-card class="mt-3" v-for="cde in selected_concept_cde" :key="cde.id" :header="cde.id">
+              <HEALCDE :cde="cde" />
+            </b-card>
+          </div>
+        </div>
+      </div>
 
       <b-card header="CDEs" class="mt-3">
         <ul style="text-align: left">
@@ -113,6 +135,8 @@ export default {
     comprehensive: {},
     selected_category: "",
     selected_concept: "",
+    selected_category_cde: null,
+    selected_concept_cde: null,
     PREFIXES: {
       'HP': 'http://purl.obolibrary.org/obo/HP_',
       'GO': 'http://purl.obolibrary.org/obo/GO_',

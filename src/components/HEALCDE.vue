@@ -1,6 +1,5 @@
 <template>
-  <div>
-    {{cde.id}}
+  <div class="text-left">
     <p v-for="designation in cde.designations" :key="designation.designation">
       <strong>Designation: </strong> {{designation}}
     </p>
