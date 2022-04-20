@@ -46,12 +46,13 @@
                       <a :href="'#' + concept.name"
                          @click="selected_concept=(selected_concept === concept.name ? '' : concept.name)"
                       >
-                      {{concept.name}} ({{concept.id}}): {{get_cdes_for_concept(concept).length}} CRFs
+                      {{concept.name}}: {{get_cdes_for_concept(concept).length}} CRFs
                       </a>
+                      (<a target="code" :href="get_uri_for_curie(concept.id)">{{concept.id}}</a>)
 
                       <ul v-if="selected_concept == concept.name && get_cdes_for_concept(concept)">
                         <li v-for="cde in get_cdes_for_concept(concept)" :key="cde['id']">
-                          <tt>{{cde.terms}}</tt> in <a :href="'#' + category.name" @click="selected_category_cde = comprehensive[cde.id.substring(8)]">{{cde.id}}</a>
+                          <tt>{{cde.terms}}</tt> in <a :href="'#' + category.name" @click="selected_category_cde = comprehensive[cde.id.substring(8)]; selected_category_text = cde.terms;">{{cde.id}}</a>
                         </li>
                       </ul>
                     </li>
@@ -64,7 +65,7 @@
 
           <div v-if="selected_category_cde" class="col-5">
             <b-card class="mt-3" v-for="cde in selected_category_cde" :key="cde.id" :header="cde.id">
-              <HEALCDE :cde="cde" />
+              <HEALCDE :cde="cde" :highlight_text="selected_category_text" />
             </b-card>
           </div>
         </div>
@@ -81,7 +82,7 @@
                   (<a target="code" :href="get_uri_for_curie(concept.id)">{{concept.id}}</a>): {{concept.count}} CRFs
                   <ul v-if="selected_concept === concept.name">
                     <li v-for="cde in concept.cdes" :key="cde['id']">
-                      <tt>{{cde.terms}}</tt> in <a :href="'#' + concept.name"  @click="selected_concept_cde = comprehensive[cde.id.substring(8)]">{{cde.id}}</a>
+                      <tt>{{cde.terms}}</tt> in <a :href="'#' + concept.name"  @click="selected_concept_cde = comprehensive[cde.id.substring(8)];  selected_concept_text = cde.terms;">{{cde.id}}</a>
                     </li>
                   </ul>
                 </li>
@@ -91,12 +92,13 @@
 
           <div v-if="selected_concept_cde" class="col-5">
             <b-card class="mt-3" v-for="cde in selected_concept_cde" :key="cde.id" :header="cde.id">
-              <HEALCDE :cde="cde" />
+              <HEALCDE :cde="cde" :highlight_text="selected_concept_text" />
             </b-card>
           </div>
         </div>
       </div>
 
+      <!--
       <b-card header="CDEs" class="mt-3">
         <ul style="text-align: left">
           <li v-for="filename in comprehensive_keys" :key="filename">
@@ -108,7 +110,7 @@
             </ul>
           </li>
         </ul>
-      </b-card>
+      </b-card> -->
 
       <p></p>
     </div>
@@ -136,7 +138,9 @@ export default {
     selected_category: "",
     selected_concept: "",
     selected_category_cde: null,
+    selected_category_text: null,
     selected_concept_cde: null,
+    selected_concept_text: null,
     PREFIXES: {
       'HP': 'http://purl.obolibrary.org/obo/HP_',
       'GO': 'http://purl.obolibrary.org/obo/GO_',
