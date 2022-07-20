@@ -191,7 +191,7 @@ export default {
               id: `HEALCDE:${filename}`,
               designations: entry['designations'],
               formElements: entry['formElements'],
-              text: entry['_ner']['scigraph']['crf_text'],
+              text: entry['_ner']['oger']['crf_text'],
             });
             // console.log("Found entry for", filename, "with keys", keys(entry['_ner']));
           });
