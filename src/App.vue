@@ -210,7 +210,7 @@ export default {
     concepts() {
       return this.nodes.filter(node => {
         let provided_by = node['provided_by']
-        if(provided_by && (provided_by[0] == 'Monarch NER service + Translator normalization API'))
+        if(provided_by && (provided_by[0] != 'Graph'))
           return true;
         return false;
       });
