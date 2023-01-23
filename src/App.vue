@@ -20,14 +20,16 @@
         </b-input-group>
       </b-card>
 
-      <!--
-
       <b-card header="File stats" class="mt-3">
-        The KGX files contain {{nodes.length}} nodes (including {{concepts.length}} concepts, {{concept_ids.length}} unique) and {{edges.length}} edges.
-        <br>
-        The comprehensive JSONL file contains {{comprehensive_keys.length}} CDEs.
+        <div v-if="pubannotator_file">
+          {{pubannotator_file.name}} contains {{entries.length}} entries referencing
+        </div>
+        <div v-else>
+          No PubAnnotator JSONL file loaded.
+        </div>
       </b-card>
 
+      <!--
       <div class="container col-12">
         <div class="row">
           <div :class="selected_category_cde ? 'col-7' : 'col-12'">
