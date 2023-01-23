@@ -29,6 +29,18 @@
         </div>
       </b-card>
 
+      <div class="container col-3">
+        <b-card :header="'Concepts (' + concept_count + ', ' + hidden_concepts.size + ' hidden)'" class="mt-3">
+          <div v-if="concept_count == 0"><em>No concepts in JSONL file.</em></div>
+          <b-form class="mr-auto">
+            <b-form-checkbox v-for="id in concept_keys_sorted" :key="id" :value="id" :checked="!(id in hidden_concepts)" @change="invertHideConcept(id)">
+              <div v-if="get_concept_label(id)">{{get_concept_label(id)}} (<a target="concept" :href="get_url(id)">{{id}}</a>)</div>
+              <div v-else><a target="concept" :href="get_url(id)">{{id}}</a></div>
+            </b-form-checkbox>
+          </b-form>
+        </b-card>
+      </div>
+
       <!--
       <div class="container col-12">
         <div class="row">
@@ -132,6 +144,7 @@ export default {
     pubannotator_text: "",
     entries: [],
     concepts: {},
+    hidden_concepts: new Set(),
     concept_labels: {},
     tracks: new Set(),
     selected_category: "",
@@ -153,6 +166,7 @@ export default {
         this.input_errors = [];
         this.entries = [];
         this.concepts = {};
+        this.hidden_concepts = new Set();
         this.concept_labels = {};
         this.tracks = new Set();
         content.split(/[\n\r]+/).forEach((row, rowIndex) => {
@@ -166,7 +180,7 @@ export default {
             let index_denotation = (den, entry) => {
               console.log("Indexing denotation", den);
 
-              const mesh_regex = /^(MESH:\w+) \((.*)(?:, score: (.*))?\)$/;
+              const mesh_regex = /^(MESH:\w+) \((.*)\s*, score: (.*)\)$/;
               const biolink_regex = /^(biolink:.*)$/;
 
               if(mesh_regex.test(den.obj)) {
@@ -244,7 +258,9 @@ export default {
     }
   },
   computed: {
-    concept_count() { return keys(this.concepts).length; }
+    concept_keys() { return keys(this.concepts); },
+    concept_keys_sorted() { return keys(this.concepts).sort(); },
+    concept_count() { return this.concept_keys.length; }
     /*
     comprehensive_keys() {
       return keys(this.comprehensive);
@@ -294,6 +310,20 @@ export default {
     },*/
   },
   methods: {
+    get_concept_label(id) {
+      if(id in this.concept_labels) {
+        return [...this.concept_labels[id]].join(', ');
+      } else return null;
+    },
+    invertHideConcept(id) {
+      if (id in this.hidden_concepts) this.hidden_concepts.delete(id);
+      else this.hidden_concepts.add(id);
+    },
+    get_url(id) {
+      if(id.startsWith('MESH:')) return 'https://id.nlm.nih.gov/mesh/' + id.substring(5);
+      if(id.startsWith('biolink:')) return 'https://w3id.org/biolink/vocab/' + id.substring(8);
+      return 'https://bioregistry.io/' + id;
+    },
     /*
     get_uri_for_curie(curie) {
       const [prefix, code] = curie.split(':');
