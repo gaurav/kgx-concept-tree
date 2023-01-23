@@ -166,8 +166,10 @@ export default {
             let index_denotation = (den, entry) => {
               console.log("Indexing denotation", den);
 
-              if(den.obj) {
-                const mesh_regex = /^(MESH:\w+) \((.*)(?:, score: (.*))?\)$/;
+              const mesh_regex = /^(MESH:\w+) \((.*)(?:, score: (.*))?\)$/;
+              const biolink_regex = /^(biolink:.*)$/;
+
+              if(mesh_regex.test(den.obj)) {
                 const res = mesh_regex.exec(den.obj);
                 if (res) {
                   if(!(res[1] in this.concepts)) {
@@ -182,10 +184,7 @@ export default {
                   }
                   this.concept_labels[res[1]].add(res[2]);
                 }
-              }
-
-              if(den.obj) {
-                const biolink_regex = /^(biolink:.*)$/;
+              } else if(biolink_regex.test(den.obj)) {
                 const res = biolink_regex.exec(den.obj);
                 if (res) {
                   if(!(res[1] in this.concepts)) {
@@ -194,6 +193,8 @@ export default {
 
                   this.concepts[res[1]].push(entry);
                 }
+              } else {
+                this.input_errors.push(`Could not index denotation: ${den} in entry: ${entry}`)
               }
             }
 
