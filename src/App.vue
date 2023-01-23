@@ -22,7 +22,7 @@
 
       <b-card header="File stats" class="mt-3">
         <div v-if="pubannotator_file">
-          {{pubannotator_file.name}} contains {{entries.length}} entries referencing
+          {{pubannotator_file.name}} contains {{entries.length}} entries referencing {{concept_count}} concepts.
         </div>
         <div v-else>
           No PubAnnotator JSONL file loaded.
@@ -115,6 +115,8 @@
 </template>
 
 <script>
+
+import { keys } from 'lodash'
 /*
 import { groupBy, toPairs, cloneDeep, has, keys } from 'lodash'
 import Vue from 'vue'
@@ -168,17 +170,17 @@ export default {
                 const mesh_regex = /^(MESH:\w+) \((.*)(?:, score: (.*))?\)$/;
                 const res = mesh_regex.exec(den.obj);
                 if (res) {
-                  if(!(res.groups[1] in this.concepts)) {
-                    this.concepts[res.groups[1]] = [];
+                  if(!(res[1] in this.concepts)) {
+                    this.concepts[res[1]] = [];
                   }
 
-                  this.concepts[res.groups[1]].push(entry);
+                  this.concepts[res[1]].push(entry);
 
                   // Add label.
-                  if(!(res.groups[1] in this.concept_labels)) {
-                    this.concept_labels[res.groups[1]] = new Set();
+                  if(!(res[1] in this.concept_labels)) {
+                    this.concept_labels[res[1]] = new Set();
                   }
-                  this.concept_labels[res.groups[1]].add(res.groups[2]);
+                  this.concept_labels[res[1]].add(res[2]);
                 }
               }
 
@@ -186,11 +188,11 @@ export default {
                 const biolink_regex = /^(biolink:.*)$/;
                 const res = biolink_regex.exec(den.obj);
                 if (res) {
-                  if(!(res.groups[1] in this.concepts)) {
-                    this.concepts[res.groups[1]] = [];
+                  if(!(res[1] in this.concepts)) {
+                    this.concepts[res[1]] = [];
                   }
 
-                  this.concepts[res.groups[1]].push(entry);
+                  this.concepts[res[1]].push(entry);
                 }
               }
             }
@@ -198,7 +200,7 @@ export default {
             if(entry.tracks) {
               entry.tracks.forEach(track => {
                 this.tracks.add(track.project);
-                Object.values(track.denotations).forEach(den => index_denotation(den, entry));
+                track.denotations.forEach(den => index_denotation(den, entry));
               });
             }
 
@@ -241,6 +243,7 @@ export default {
     }
   },
   computed: {
+    concept_count() { return keys(this.concepts).length; }
     /*
     comprehensive_keys() {
       return keys(this.comprehensive);
