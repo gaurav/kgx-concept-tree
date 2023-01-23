@@ -130,6 +130,8 @@ export default {
     pubannotator_text: "",
     entries: [],
     concepts: {},
+    concept_labels: {},
+    tracks: new Set(),
     selected_category: "",
     selected_concept: "",
     selected_category_cde: null,
@@ -149,6 +151,8 @@ export default {
         this.input_errors = [];
         this.entries = [];
         this.concepts = {};
+        this.concept_labels = {};
+        this.tracks = new Set();
         content.split(/[\n\r]+/).forEach((row, rowIndex) => {
           if (row.trim() === '') return;
           let entry;
@@ -157,16 +161,49 @@ export default {
             this.entries.push(entry);
 
             // Run some indexing.
-            let index_denotation = function(den) {
+            let index_denotation = (den, entry) => {
               console.log("Indexing denotation", den);
+
+              if(den.obj) {
+                const mesh_regex = /^(MESH:\w+) \((.*)(?:, score: (.*))?\)$/;
+                const res = mesh_regex.exec(den.obj);
+                if (res) {
+                  if(!(res.groups[1] in this.concepts)) {
+                    this.concepts[res.groups[1]] = [];
+                  }
+
+                  this.concepts[res.groups[1]].push(entry);
+
+                  // Add label.
+                  if(!(res.groups[1] in this.concept_labels)) {
+                    this.concept_labels[res.groups[1]] = new Set();
+                  }
+                  this.concept_labels[res.groups[1]].add(res.groups[2]);
+                }
+              }
+
+              if(den.obj) {
+                const biolink_regex = /^(biolink:.*)$/;
+                const res = biolink_regex.exec(den.obj);
+                if (res) {
+                  if(!(res.groups[1] in this.concepts)) {
+                    this.concepts[res.groups[1]] = [];
+                  }
+
+                  this.concepts[res.groups[1]].push(entry);
+                }
+              }
             }
 
             if(entry.tracks) {
-              Object.values(entry.tracks).forEach(index_denotation);
+              entry.tracks.forEach(track => {
+                this.tracks.add(track.project);
+                Object.values(track.denotations).forEach(den => index_denotation(den, entry));
+              });
             }
 
             if(entry.denotations) {
-              entry.denotations.forEach(index_denotation);
+              entry.denotations.forEach(den => index_denotation(den, entry));
             }
 
             // console.log(keys(entry));
