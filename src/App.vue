@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <h1>KGX Concept Tree</h1>
+    <h1>ALAN</h1>
 
     <div class="col-10 m-auto">
       <b-card header="Inputs" class="mt-3">
@@ -15,16 +15,12 @@
             </li>
           </ul>
         </b-alert>
-        <b-input-group prepend="KGX nodes file">
-          <b-form-file v-model="nodes_file"></b-form-file>
-        </b-input-group>
-        <b-input-group prepend="KGX edges file">
-          <b-form-file v-model="edges_file"></b-form-file>
-        </b-input-group>
-        <b-input-group prepend="Comprehensive JSONL file">
-          <b-form-file v-model="comprehensive_file"></b-form-file>
+        <b-input-group prepend="PubAnnotator JSONL file">
+          <b-form-file v-model="pubannotator_file"></b-form-file>
         </b-input-group>
       </b-card>
+
+      <!--
 
       <b-card header="File stats" class="mt-3">
         The KGX files contain {{nodes.length}} nodes (including {{concepts.length}} concepts, {{concept_ids.length}} unique) and {{edges.length}} edges.
@@ -98,7 +94,6 @@
         </div>
       </div>
 
-      <!--
       <b-card header="CDEs" class="mt-3">
         <ul style="text-align: left">
           <li v-for="filename in comprehensive_keys" :key="filename">
@@ -118,23 +113,21 @@
 </template>
 
 <script>
+/*
 import { groupBy, toPairs, cloneDeep, has, keys } from 'lodash'
 import Vue from 'vue'
 
-import HEALCDE from './components/HEALCDE'
+ */
 
 export default {
   name: 'App',
-  components: { HEALCDE },
   data() { return {
     input_in_progress: false,
     input_errors: [],
-    nodes_file: null,
-    nodes_text: "",
-    edges_file: null,
-    edges_text: "",
-    comprehensive_file: null,
-    comprehensive: {},
+    pubannotator_file: null,
+    pubannotator_text: "",
+    entries: [],
+    concepts: {},
     selected_category: "",
     selected_concept: "",
     selected_category_cde: null,
@@ -148,36 +141,41 @@ export default {
     },
   }},
   watch: {
-    nodes_file() {
+    pubannotator_file() {
       this.input_in_progress = true;
-      this.nodes_file.text().then(content => {
-        this.nodes_text = content;
-        this.input_in_progress = false;
-      });
-    },
-    edges_file() {
-      this.input_in_progress = true;
-      this.edges_file.text().then(content => {
-        this.edges_text = content;
-        this.input_in_progress = false;
-      });
-    },
-    comprehensive_file() {
-      this.input_in_progress = true;
-      this.comprehensive_file.text().then(content => {
+      this.pubannotator_file.text().then(content => {
         this.input_errors = [];
+        this.entries = [];
+        this.concepts = {};
         content.split(/[\n\r]+/).forEach((row, rowIndex) => {
-          if (row.trim() == '') return;
+          if (row.trim() === '') return;
           let entry;
           try {
             entry = JSON.parse(row);
-            console.log(keys(entry));
+            this.entries.push(entry);
+
+            // Run some indexing.
+            let index_denotation = function(den) {
+              console.log("Indexing denotation", den);
+            }
+
+            if(entry.tracks) {
+              Object.values(entry.tracks).forEach(index_denotation);
+            }
+
+            if(entry.denotations) {
+              entry.denotations.forEach(index_denotation);
+            }
+
+            // console.log(keys(entry));
           } catch (err) {
             this.input_errors.push({
               rowIndex,
               text: `Could not parse comprehensive JSONL line ${rowIndex}: ${err}`
             })
           }
+
+          /*
           let filenames = entry.designations.flatMap(d => {
             if (d.designation.startsWith('Filename: ')) {
               return [d.designation.substr(10)];
@@ -196,11 +194,15 @@ export default {
             // console.log("Found entry for", filename, "with keys", keys(entry['_ner']));
           });
           this.input_in_progress = false;
-        });
+           */
+        })
+
+        this.input_in_progress = false;
       });
     }
   },
   computed: {
+    /*
     comprehensive_keys() {
       return keys(this.comprehensive);
     },
@@ -246,9 +248,10 @@ export default {
     },
     edges() {
       return (this.edges_text).split(/\r\n|\r|\n/).filter(str => str != '').map(JSON.parse);
-    },
+    },*/
   },
   methods: {
+    /*
     get_uri_for_curie(curie) {
       const [prefix, code] = curie.split(':');
       if (has(this.PREFIXES, prefix)) {
@@ -266,7 +269,7 @@ export default {
           terms: [...new Set(value.map(edge => edge['name'].toLowerCase()))],
         }
       })
-    },
+    },*/
   },
 }
 </script>
